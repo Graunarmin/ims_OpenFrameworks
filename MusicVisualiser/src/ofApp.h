@@ -8,7 +8,7 @@ Sources:
 #pragma once
 
 #include "ofMain.h"
-#include "ofxGui.h"
+#include "RemoteControl.h"
 
 class ofApp : public ofBaseApp{
 
@@ -31,39 +31,37 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo) override;
 		void gotMessage(ofMessage msg) override;
 	
-	void loadSamples();
+		void loadSamples();
+		
+		float autoPlayMinTempo;
+		float autoPlayMaxTempo;
+		bool autoPlayOn;
+		
+		float sampleSpeed;
+		float samplePan;
+		
+		bool showProgress;
+
+	private:
+		void AutoPlay();
+		void PlaySampleAt(int index);
+		void DrawProgressBars();
+		void DrawSoundReactiveVisualizer();
+		void FadeOutBackground();
 	
-	float autoPlayMinTempo;
-	float autoPlayMaxTempo;
-	bool autoPlayOn;
-	
-	
-	
-	bool showProgress;
-	
-	ofxPanel gui;
-	
-	ofParameter<bool> autoplay;
-	
-	//ofxSlider autoPlayTempo;
-	
-	//ofParameter<float> minTempo;
-	//ofParameter<float> maxTempo;
-	
-private:
-	void AutoPlay();
-	void PlaySampleAt(int index);
-	void DrawProgressBars();
-	void DrawSoundReactiveVisualizer();
-	void FadeOutBackground();
-	
-	int m_totalSampleCount;
-	float m_currentTime;
-	
-	float m_autoPlayTempo;
-	
-	std::vector<ofSoundPlayer> m_samples;
-	std::string m_samplePath;
-	int m_nextIndex;
+		void UpdateSpeed(float newSpeed);
+		void UpdatePan(float newPan);
+		void LoopSample(bool loop, int sampleIndex);
+		
+		int m_totalSampleCount;
+		float m_currentTime;
+		
+		float m_autoPlayTempo;
+		
+		std::vector<ofSoundPlayer> m_samples;
+		std::string m_samplePath;
+		int m_nextIndex;
+		
+		RemoteControl controller;
 	
 };

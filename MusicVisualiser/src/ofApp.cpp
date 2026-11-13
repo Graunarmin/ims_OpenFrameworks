@@ -13,7 +13,6 @@ Sources:
 //--------------------------------------------------------------
 void ofApp::setup()
 {
-	ofSetBackgroundColor(13, 17, 22);
 	m_totalSampleCount = 8;
 	loadSamples();
 	
@@ -22,9 +21,17 @@ void ofApp::setup()
 	showProgress = true;
 	autoPlayMinTempo = 4000;
 	autoPlayMaxTempo = 6000;
+	sampleSpeed = 1;
+	samplePan = 0;
 	m_currentTime = ofGetSystemTimeMillis();
 	
+	//ofSetBackgroundAuto(true);
 	ofSetBackgroundAuto(false); // the screen won't be cleared anymore
+	ofEnableAlphaBlending(); //on by default
+	//ofSetBackgroundColor(0);
+	ofBackground(0, 0, 0);
+	
+	controller = RemoteControl();
 	
 }
 
@@ -32,6 +39,10 @@ void ofApp::setup()
 // update() is always called before draw() so ... every frame I guess?
 void ofApp::update()
 {
+	controller.Update();
+	UpdatePan(controller.Pan);
+	UpdateSpeed(controller.Speed);
+	
 	if(autoPlayOn)
 	{
 		AutoPlay();
@@ -43,6 +54,7 @@ void ofApp::update()
 void ofApp::draw()
 {
 	FadeOutBackground();
+	
 	ofSetColor(255);
 	
 	if(showProgress)
@@ -90,6 +102,20 @@ void ofApp::DrawProgressBars()
 							   10, (i+1) * 20);
 		}
 	}
+	
+	ofDrawBitmapString("Toggle help with 'g'", 10, 200);
+	ofDrawBitmapString("Toggle Autoplay with 'a'", 10, 220);
+	if(autoPlayOn)
+	{
+		ofDrawBitmapString("Auto play is ON", 10, 240);
+		ofDrawBitmapString("Next Sample in " + ofToString(((m_currentTime + m_autoPlayTempo) - ofGetSystemTimeMillis())/1000), 10, 260);
+	}
+	else
+	{
+		ofDrawBitmapString("Auto play is OFF", 10, 240);
+	}
+	ofDrawBitmapString("Speed for next sample is " + ofToString(sampleSpeed), 10, 300);
+	ofDrawBitmapString("Pan for next sample is " + ofToString(samplePan), 10, 320);
 }
 	
 void ofApp::AutoPlay()
@@ -97,17 +123,21 @@ void ofApp::AutoPlay()
 	if(ofGetSystemTimeMillis() > m_currentTime + m_autoPlayTempo)
 	{
 		m_nextIndex = ofRandom(m_totalSampleCount);
-		m_samples[m_nextIndex].play();
+		PlaySampleAt(m_nextIndex);
 		m_currentTime = ofGetSystemTimeMillis();
-		m_autoPlayTempo = ofRandom(autoPlayMinTempo, autoPlayMaxTempo);
+		m_autoPlayTempo = ofRandom(autoPlayMinTempo, autoPlayMaxTempo) / sampleSpeed;
 	}
 }
 
 void ofApp::PlaySampleAt(int index)
 {
+	std::cout << "Playing Sample at " << index + 1 << std::endl;
 	if(m_samples.size() >= index + 1)
 	{
-		m_samples[index].play();
+		auto sample = m_samples[index];
+		sample.setSpeed(sampleSpeed);
+		sample.setPan(samplePan);
+		sample.play();
 	}
 	else
 	{
@@ -117,10 +147,12 @@ void ofApp::PlaySampleAt(int index)
 
 void ofApp::DrawSoundReactiveVisualizer()
 {
-	int barWidth = 80;
-	int barLength = 300;
-	float bandsToGet = 256;
-	float width = (float) (5*128)/bandsToGet;
+	float bandsToGet = 512;
+	//float exactBarWidth = (2 * acos(0.0) * 50) / bandsToGet;
+	float barWidth = 40;
+	int barLength = 400;
+	
+	//float width = (float) (5*128)/bandsToGet;
 	
 	auto val = ofSoundGetSpectrum(bandsToGet);
 	
@@ -130,8 +162,8 @@ void ofApp::DrawSoundReactiveVisualizer()
 		//ofDrawRectangle(100 + i * width, ofGetHeight()-100, width, -(val[i] * 200));
 		
 		ofPushMatrix();
-		ofTranslate(ofGetWidth()/2, ofGetHeight()/2);
-		ofRotateDeg(360/bandsToGet * i);
+		ofTranslate(ofGetWidth()/2, ofGetHeight()/2); // translate the origin to the middle of the window
+		ofRotateDeg(360/bandsToGet * i); // rotate around the (newly set) origin
 		
 		ofColor drawingColor;
 		drawingColor.setHsb(255/bandsToGet * i, 255, 255, 50);
@@ -144,10 +176,20 @@ void ofApp::DrawSoundReactiveVisualizer()
 
 void ofApp::FadeOutBackground()
 {
-	ofSetColor(0, 0, 0, 10);
+	ofSetColor(0, 0, 0, 38);
+	//ofFill();
 	ofDrawRectangle(0, 0, ofGetWidth(), ofGetHeight());
 }
 
+void ofApp::UpdateSpeed(float newSpeed)
+{
+	sampleSpeed = newSpeed;
+}
+
+void ofApp::UpdatePan(float newPan)
+{
+	samplePan = newPan;
+}
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key)
@@ -190,6 +232,32 @@ void ofApp::keyPressed(int key)
 			break;
 		case 'g':
 			showProgress = !showProgress;
+			break;
+			
+		case OF_KEY_LEFT:
+			if(samplePan > -1.0f)
+			{
+				UpdatePan(samplePan - 0.1f);
+			}
+			break;
+		case OF_KEY_RIGHT:
+			if(samplePan < 1.0f)
+			{
+				UpdatePan(samplePan + 0.1f);
+			}
+			break;
+		case OF_KEY_UP:
+			if(sampleSpeed < 2.0f)
+			{
+				UpdateSpeed(sampleSpeed + 0.1f);
+			}
+			break;
+		case OF_KEY_DOWN:
+			if(sampleSpeed > 0.1)
+			{
+				UpdateSpeed(sampleSpeed - 0.1f);
+			}
+			break;
 			
 		default:
 			break;
