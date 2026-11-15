@@ -46,7 +46,8 @@ class ofApp : public ofBaseApp{
 		void AutoPlay();
 		void PlaySampleAt(int index);
 		void DrawProgressBars();
-		void DrawSoundReactiveVisualizer();
+		void DrawSunVisualization();
+		void DrawSineVisualizaztion();
 		void FadeOutBackground();
 	
 		void UpdateSpeed(float newSpeed);

@@ -25,6 +25,8 @@ void ofApp::setup()
 	samplePan = 0;
 	m_currentTime = ofGetSystemTimeMillis();
 	
+	ofSetCircleResolution(100);
+	
 	//ofSetBackgroundAuto(true);
 	ofSetBackgroundAuto(false); // the screen won't be cleared anymore
 	ofEnableAlphaBlending(); //on by default
@@ -59,9 +61,11 @@ void ofApp::draw()
 	
 	if(showProgress)
 	{
-		DrawProgressBars();
+		//DrawProgressBars();
 	}
-	DrawSoundReactiveVisualizer();
+	
+	DrawSineVisualizaztion();
+	//DrawSunVisualization();
 	
 }
 
@@ -145,7 +149,7 @@ void ofApp::PlaySampleAt(int index)
 	}
 }
 
-void ofApp::DrawSoundReactiveVisualizer()
+void ofApp::DrawSunVisualization()
 {
 	float bandsToGet = 512;
 	//float exactBarWidth = (2 * acos(0.0) * 50) / bandsToGet;
@@ -171,6 +175,87 @@ void ofApp::DrawSoundReactiveVisualizer()
 		ofDrawRectangle(50, -barWidth/2, val[i] * barLength, barWidth/2);
 		
 		ofPopMatrix();
+	}
+}
+
+void ofApp::DrawSineVisualizaztion()
+{
+	float time = ofGetElapsedTimef();
+	int bandsToGet = 512;
+	auto val = ofSoundGetSpectrum(bandsToGet);
+	auto screenHeight = ofGetHeight();
+	
+	int circlesPerBand = glm::ceil(screenHeight/bandsToGet) + 1;
+	bool evenNumberOfCircles = circlesPerBand % 2 == 0;
+	int halfTheCircles = glm::floor(circlesPerBand/2);
+	int stepsToMiddle = glm::ceil(circlesPerBand / 2);
+	
+	int bandCounter = 0;
+	
+	for(int x = 0; x < 1; x++)
+	{
+		for(int p = 0; p < screenHeight; p += circlesPerBand)
+		{
+			auto shiftedIndex = (bandCounter - bandsToGet/4) % bandsToGet;
+			
+			for (int i = 0; i < circlesPerBand; i++)
+			{
+				ofSetColor(127 + 127 * sin((p+i) * 0.02 + time),
+						   127 + 127 * sin((p+i) * 0.021 + time),
+						   127 + 127 * sin((p+i) * 0.022 + time));
+				
+				/*ofSetColor(127 + 127 * sin(counter * (val[counter] + 0.01) + time),
+				 127 + 127 * sin(counter * (val[counter] + 0.011) + time),
+				 127 + 127 * sin(counter * (val[counter] + 0.012) + time));*/
+				
+				float relativeRadius;
+				
+				if(!evenNumberOfCircles)
+				{
+					float step = ((i % stepsToMiddle) + 1) / stepsToMiddle;
+					if(i < halfTheCircles)
+					{
+						relativeRadius = ofLerp(val[shiftedIndex-1], val[shiftedIndex], step);
+					}
+					else if(i > halfTheCircles)
+					{
+						relativeRadius = ofLerp(val[shiftedIndex], val[shiftedIndex + 1], step);
+					}
+					else
+					{
+						relativeRadius = val[shiftedIndex];
+					}
+				}
+				else
+				{
+					if(i < halfTheCircles -1)
+					{
+						relativeRadius = ofLerp(val[shiftedIndex - 1], val[shiftedIndex], (i+1) / stepsToMiddle);
+					}
+					else if(i > halfTheCircles + 1)
+					{
+						relativeRadius = ofLerp(val[shiftedIndex], val[shiftedIndex + 1], (i % stepsToMiddle) / stepsToMiddle);
+					}
+					else
+					{
+						relativeRadius = val[shiftedIndex];
+					}
+				}
+				
+				/*ofDrawCircle(ofGetWidth()/2 + 100 * sin((p + i) * 0.01 + time),
+							 (p + i),
+							 50 + 30 * sin((p + i) * 0.005 + time));*/
+				
+				/*ofDrawCircle(150 * x + 100 * sin((p + i) * 0.01 + time + x),
+							 (p + i),
+							 50 + 30 * sin((p + i) * 0.005 + time));*/
+				
+				ofDrawCircle(ofGetWidth()/2 + 100 * sin((p + i) * 0.01 + time + x),
+							 (p + i),
+							 20 + 30 * sin(relativeRadius * bandCounter));
+			}
+			bandCounter += 1;
+		}
 	}
 }
 
