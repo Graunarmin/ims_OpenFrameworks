@@ -13,8 +13,6 @@ RemoteControl::RemoteControl()
 	sender.setup("192.168.178.69", 8000);
 	receiver.setup(8001);
 	message.setAddress("/mv");
-	Speed = 1;
-	Pan = 0;
 }
 
 void RemoteControl::Setup()
@@ -36,25 +34,38 @@ void RemoteControl::Update()
 		
 		if(receivedAdress == "/mv/fader_speed")
 		{
-			Speed = inputMessage.getArgAsFloat(0);
-			
-			feedbackMessage.clear();
-			feedbackMessage.addFloatArg(Speed);
-			feedbackMessage.setAddress("/mv-updated/speed");
-			sender.sendMessage(feedbackMessage);
-			
-			std::cout << "New speed: " << Speed << std::endl;
+			auto speed = inputMessage.getArgAsFloat(0);
+			ofNotifyEvent(OnSpeedChanged, speed);
+			SendSpeedChangeFeedback(speed);
 		}
 		else if(receivedAdress == "/mv/dial_pan")
 		{
-			Pan = inputMessage.getArgAsFloat(0);
+			auto pan = inputMessage.getArgAsFloat(0);
+			ofNotifyEvent(OnPanChanged, pan);
+			SendPanChangeFeedback(pan);
+		}
+		else if(receivedAdress == "/mv/auto-play")
+		{
+			bool autoPlay = inputMessage.getArgAsBool(0);
+			ofNotifyEvent(OnAutoPlayChanged, autoPlay);
+			SendAutoPlayChangeFeedback(autoPlay);
 			
-			feedbackMessage.clear();
-			feedbackMessage.addFloatArg(Pan);
-			feedbackMessage.setAddress("/mv-updated/pan");
-			sender.sendMessage(feedbackMessage);
-			
-			std::cout << "New pan: " << Pan << std::endl;
+		}
+		else if(receivedAdress == "/mv/sample-selection")
+		{
+			// The buttons send two messages, one on press (true) and one on release (false), but we only want to play the sample once
+			if(inputMessage.getArgAsBool(1))
+			{
+				int sampleIndex = inputMessage.getArgAsInt(0);
+				ofNotifyEvent(OnNewSampleSelected, sampleIndex);
+				
+			}
+		}
+		else if(receivedAdress == "/mv/visu-style")
+		{
+			auto index = inputMessage.getArgAsInt(0);
+			ofNotifyEvent(OnVisuStyleChanged, index);
+			SendVisuChangeFeedback(index);
 		}
 		else
 		{
@@ -62,4 +73,41 @@ void RemoteControl::Update()
 		}
 		
 	}
+}
+
+
+void RemoteControl::SendSpeedChangeFeedback(float speedValue)
+{
+	ofxOscMessage feedbackMessage;
+
+	feedbackMessage.addFloatArg(speedValue);
+	feedbackMessage.setAddress("/mv-updated/speed");
+	sender.sendMessage(feedbackMessage);
+}
+
+void RemoteControl::SendPanChangeFeedback(float panValue)
+{
+	ofxOscMessage feedbackMessage;
+
+	feedbackMessage.addFloatArg(panValue);
+	feedbackMessage.setAddress("/mv-updated/pan");
+	sender.sendMessage(feedbackMessage);
+}
+
+void RemoteControl::SendAutoPlayChangeFeedback(bool autoPlayValue)
+{
+	ofxOscMessage feedbackMessage;
+
+	feedbackMessage.addFloatArg(autoPlayValue);
+	feedbackMessage.setAddress("/mv-updated/auto-play");
+	sender.sendMessage(feedbackMessage);
+}
+
+void RemoteControl::SendVisuChangeFeedback(int visuIndex)
+{
+	ofxOscMessage feedbackMessage;
+
+	feedbackMessage.addFloatArg(visuIndex);
+	feedbackMessage.setAddress("/mv-updated/visu-style");
+	sender.sendMessage(feedbackMessage);
 }

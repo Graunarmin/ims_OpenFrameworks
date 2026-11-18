@@ -30,38 +30,44 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h) override;
 		void dragEvent(ofDragInfo dragInfo) override;
 		void gotMessage(ofMessage msg) override;
-	
-		void loadSamples();
-		
-		float autoPlayMinTempo;
-		float autoPlayMaxTempo;
-		bool autoPlayOn;
-		
-		float sampleSpeed;
-		float samplePan;
-		
-		bool showProgress;
 
 	private:
+		void LoadSamples();
 		void AutoPlay();
 		void PlaySampleAt(int index);
 		void DrawProgressBars();
-		void DrawSunVisualization();
-		void DrawSineVisualizaztion();
+		void WriteHelpText();
+		void DrawFrequencyWheel();
+		void DrawSineWaveRadiusSpectrum();
+		void DrawSineWaveColorSpectrum();
 		void FadeOutBackground();
 	
-		void UpdateSpeed(float newSpeed);
-		void UpdatePan(float newPan);
-		void LoopSample(bool loop, int sampleIndex);
+		void UpdateSpeedBy(float amount);
+		void UpdateSpeedTo(float &newSpeed);
+		void UpdatePanBy(float amount);
+		void UpdatePanTo(float &newPan);
+	
+		void ToggleAutoPlay();
+		void UpdateAutoPlayTo(bool &newValue);
+		void OnSampleTrackSelected(int &buttonNumber);
+		void UpdateVisuStyleTo(int &index);
+		void UpdateVisuStyleTo(int index);
 		
-		int m_totalSampleCount;
 		float m_currentTime;
-		
-		float m_autoPlayTempo;
+		int m_totalSampleCount;
+		int m_visualizationIndex;
 		
 		std::vector<ofSoundPlayer> m_samples;
 		std::string m_samplePath;
-		int m_nextIndex;
+		int m_nextSampleIndex;
+		float m_sampleSpeed;
+		float m_samplePan;
+	
+		float m_autoPlayTempo;
+		float m_autoPlayMinTempo;
+		float m_autoPlayMaxTempo;
+		bool m_autoPlayOn;
+		bool m_showProgress;
 		
 		RemoteControl controller;
 	
