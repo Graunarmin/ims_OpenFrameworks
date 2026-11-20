@@ -8,7 +8,12 @@ Sources:
 #pragma once
 
 #include "ofMain.h"
+#include "ofxGui.h"
+#include "ofxDropdown.h"
 #include "RemoteControl.h"
+#include "VisualizationRenderer.h"
+#include "WheelRenderer.h"
+#include "SineColorRenderer.h"
 
 class ofApp : public ofBaseApp{
 
@@ -30,7 +35,7 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h) override;
 		void dragEvent(ofDragInfo dragInfo) override;
 		void gotMessage(ofMessage msg) override;
-
+	
 	private:
 		void LoadSamples();
 		void AutoPlay();
@@ -42,17 +47,51 @@ class ofApp : public ofBaseApp{
 		void DrawSineWaveColorSpectrum();
 		void FadeOutBackground();
 	
+		/// \brief Adds the given amount to the current speed and sends an update to the remote control, to update the osc-interface.
+		/// Callback function for key presses.
 		void UpdateSpeedBy(float amount);
-		void UpdateSpeedTo(float &newSpeed);
-		void UpdatePanBy(float amount);
-		void UpdatePanTo(float &newPan);
-	
-		void ToggleAutoPlay();
-		void UpdateAutoPlayTo(bool &newValue);
-		void OnSampleTrackSelected(int &buttonNumber);
-		void UpdateVisuStyleTo(int &index);
-		void UpdateVisuStyleTo(int index);
 		
+		/// \brief Sets the speed to the given value.
+		/// Callback function for changes from RemoteControl (via OSC).
+		void UpdateSpeedTo(float &newSpeed);
+	
+		/// \brief Sends an update via OSC with the new speed.
+		/// Callback function for gui changes concerning speed, to update the osc-interface
+		void NotifyOscOnSpeedChange(float &newSpeed);
+	
+		/// \brief Adds the given amount to the current pan and sends an update to the remote control, to update the osc-interface.
+		/// Callback function for key presses.
+		void UpdatePanBy(float amount);
+	
+		/// \brief Sets the pan value to the given amount.
+		/// Callback function for changes from RemoteControl (via OSC).
+		void UpdatePanTo(float &newPan);
+		
+		/// \brief Sends an update via OSC with the new pan.
+		/// Callback function for gui changes concerning pan, to update the osc-interface.
+		void NotifyOscOnPanChange(float &newPan);
+	
+		/// \brief Sets the index of the visualization to the given index and also updates the gui respectively.
+		void UpdateVisuStyleTo(int &index);
+	
+		/// \brief Calls UpdateVisuStyleTo() and additionaly sends an update to the remote control, to update the osc-interface.
+		void OnVisuStyleChangedManual(int index);
+	
+		/// \brief Callback function for changes in the gui concerning the visualization-sytle. Calls OnVisuStyleChangedManual() because that one cannot receive a reference but this one must -.-
+		void OnGuiVisuStyleChanged(int &index);
+	
+		/// \brief Toggles autoplay to the opposite of it's current value and sends an update to the remote control, to update the osc-interface.
+		/// Callback function for key presses.
+		void ToggleAutoPlay();
+
+		/// \brief Sets autoplay to the given value.
+		/// Callback function for changes from RemoteControl (via OSC).
+		void UpdateAutoPlayTo(bool &newValue);
+
+		/// \brief Calls PlaySampleAt() with the given number - 1.
+		/// Callback function for selections via RemoteControl (via OSC).
+		void OnSampleTrackSelected(int &buttonNumber);
+			
 		float m_currentTime;
 		int m_totalSampleCount;
 		int m_visualizationIndex;
@@ -60,15 +99,21 @@ class ofApp : public ofBaseApp{
 		std::vector<ofSoundPlayer> m_samples;
 		std::string m_samplePath;
 		int m_nextSampleIndex;
-		float m_sampleSpeed;
-		float m_samplePan;
-	
+		ofParameter<float> m_sampleSpeed;
+		ofParameter<float> m_samplePan;
+		
 		float m_autoPlayTempo;
 		float m_autoPlayMinTempo;
 		float m_autoPlayMaxTempo;
-		bool m_autoPlayOn;
+		ofxToggle m_autoPlayOn;
 		bool m_showProgress;
 		
+		ofxPanel gui;
+		ofParameterGroup parameters;
+		std::unique_ptr<ofxIntDropdown> visuStylesDropdown;
+			
 		RemoteControl controller;
+		WheelRenderer rendererWheel;
+		SineColorRenderer rendererColor;
 	
 };

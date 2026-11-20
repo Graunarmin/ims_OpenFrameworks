@@ -29,18 +29,46 @@ void ofApp::setup()
 	
 	ofSetCircleResolution(100);
 	
-	m_visualizationIndex = 1;
+	m_visualizationIndex = 0;
 	//ofSetBackgroundAuto(false); // the screen won't be cleared anymore if set to false
 	ofEnableAlphaBlending(); //on by default?
 	ofBackground(0, 0, 0);
 	
 	controller = RemoteControl();
+	rendererWheel = WheelRenderer();
+	rendererWheel.setup("Wheel");
+	
+	rendererColor = SineColorRenderer();
+	rendererColor.setup("Sine Wave – Color");
 	
 	ofAddListener(controller.OnSpeedChanged, this, &ofApp::UpdateSpeedTo);
 	ofAddListener(controller.OnPanChanged, this, &ofApp::UpdatePanTo);
 	ofAddListener(controller.OnAutoPlayChanged, this, &ofApp::UpdateAutoPlayTo);
 	ofAddListener(controller.OnNewSampleSelected, this, &ofApp::OnSampleTrackSelected);
 	ofAddListener(controller.OnVisuStyleChanged, this, &ofApp::UpdateVisuStyleTo);
+	
+	gui.setup();
+	gui.add(m_autoPlayOn.setup("Autoplay", true));
+	gui.add(m_samplePan.set("Pan",0, -1, 1));
+	gui.add(m_sampleSpeed.set("Speed", 1, 0.1, 2));
+	
+	visuStylesDropdown = std::make_unique<ofxIntDropdown>("Choose Style");
+	visuStylesDropdown -> disableMultipleSelection();
+	visuStylesDropdown -> enableCollapseOnSelection();
+	visuStylesDropdown -> add(0, "Spectrum Wheel");
+	visuStylesDropdown -> add(1, "Sine Wave – Radius");
+	visuStylesDropdown -> add(2, "Sine Wave – Color");
+	gui.add(visuStylesDropdown.get());
+	visuStylesDropdown -> setSelectedValueByIndex(m_visualizationIndex, false);
+	
+	parameters.setName("Settings");
+	parameters.add(rendererWheel.parameters);
+	parameters.add(rendererColor.parameters);
+	gui.add(parameters);
+	
+	// TODO: Add Listeners to parameters so we can notify TouchOSC?
+	
+	visuStylesDropdown -> addListener(this, &ofApp::OnGuiVisuStyleChanged);
 	
 }
 
@@ -70,6 +98,7 @@ void ofApp::draw()
 	if(m_showProgress)
 	{
 		DrawProgressBars();
+		gui.draw();
 	}
 	
 	if(m_visualizationIndex == 1)
@@ -78,11 +107,13 @@ void ofApp::draw()
 	}
 	else if(m_visualizationIndex == 2)
 	{
-		DrawSineWaveColorSpectrum();
+		//DrawSineWaveColorSpectrum();
+		rendererColor.draw();
 	}
 	else
 	{
-		DrawFrequencyWheel();
+		//DrawFrequencyWheel();
+		rendererWheel.draw();
 	}
 
 }
@@ -96,6 +127,8 @@ void ofApp::exit()
 	ofRemoveListener(controller.OnAutoPlayChanged, this, &ofApp::UpdateAutoPlayTo);
 	ofRemoveListener(controller.OnNewSampleSelected, this, &ofApp::OnSampleTrackSelected);
 	ofRemoveListener(controller.OnVisuStyleChanged, this, &ofApp::UpdateVisuStyleTo);
+
+	visuStylesDropdown -> removeListener(this, &ofApp::OnGuiVisuStyleChanged);
 	
 	std::cout << "Exiting Application" << std::endl;
 }
@@ -210,6 +243,11 @@ void ofApp::UpdateSpeedTo(float &newSpeed)
 	m_sampleSpeed = newSpeed;
 }
 
+void ofApp::NotifyOscOnSpeedChange(float &newSpeed)
+{
+	controller.SendSpeedChangeFeedback(m_sampleSpeed);
+}
+
 // ---- PAN ----
 
 void ofApp::UpdatePanBy(float amount)
@@ -222,6 +260,10 @@ void ofApp::UpdatePanTo(float &newPan)
 	m_samplePan = newPan;
 }
 
+void ofApp::NotifyOscOnPanChange(float &newPan)
+{
+	controller.SendPanChangeFeedback(m_samplePan);
+}
 
 // ---- VISUALIZATION ----
 void ofApp::UpdateVisuStyleTo(int &index)
@@ -234,19 +276,20 @@ void ofApp::UpdateVisuStyleTo(int &index)
 	{
 		ofSetBackgroundAuto(false);
 	}
+	visuStylesDropdown -> setSelectedValueByIndex(index, false);
 }
 
-void ofApp::UpdateVisuStyleTo(int index)
+void ofApp::OnVisuStyleChangedManual(int index)
 {
-	m_visualizationIndex = index;
-	if(index == 1 || index == 2){
-		ofSetBackgroundAuto(true);
-	}
-	else
-	{
-		ofSetBackgroundAuto(false);
-	}
+	UpdateVisuStyleTo(index);
 	controller.SendVisuChangeFeedback(m_visualizationIndex);
+}
+
+void ofApp::OnGuiVisuStyleChanged(int &index)
+{
+	OnVisuStyleChangedManual(index);
+	//UpdateVisuStyleTo(index);
+	//controller.SendVisuChangeFeedback(m_visualizationIndex);
 }
 
 void ofApp::FadeOutBackground()
@@ -258,7 +301,7 @@ void ofApp::FadeOutBackground()
 
 void ofApp::DrawFrequencyWheel()
 {
-	float bandsToGet = 512;
+	/*float bandsToGet = 512;
 	//float exactBarWidth = (2 * acos(0.0) * 50) / bandsToGet;
 	float barWidth = 40;
 	int barLength = 400;
@@ -280,7 +323,7 @@ void ofApp::DrawFrequencyWheel()
 		ofDrawRectangle(50, -barWidth/2, val[i] * barLength, barWidth/2);
 		
 		ofPopMatrix();
-	}
+	}*/
 }
 
 void ofApp::DrawSineWaveRadiusSpectrum()
@@ -297,7 +340,7 @@ void ofApp::DrawSineWaveRadiusSpectrum()
 	
 	int bandCounter = 0;
 	
-	for(int x = 0; x < 1; x++)
+	for(int ribbon = 0; ribbon < 1; ribbon++)
 	{
 		for(int p = 0; p < screenHeight; p += circlesPerBand)
 		{
@@ -305,9 +348,9 @@ void ofApp::DrawSineWaveRadiusSpectrum()
 			
 			for (int i = 0; i < circlesPerBand; i++)
 			{
-				ofSetColor(127 + 127 * sin((p+i) * 0.02 + time),
-						   127 + 127 * sin((p+i) * 0.021 + time),
-						   127 + 127 * sin((p+i) * 0.022 + time));
+				ofSetColor(127 + 127 * sin((p+i) * 0.02 + time + ribbon),
+						   127 + 127 * sin((p+i) * 0.021 + time + ribbon),
+						   127 + 127 * sin((p+i) * 0.022 + time + ribbon));
 				
 				// Interpolation between the radii so the change is a bit smoother
 				float lerpedRadius;
@@ -352,9 +395,11 @@ void ofApp::DrawSineWaveRadiusSpectrum()
 							 (p + i),
 							 50 + 30 * sin((p + i) * 0.005 + time + x));*/
 				
-				ofDrawCircle(ofGetWidth()/2 + 100 * sin((p + i) * 0.01 + time + x),
+				int amplitude = 100;
+				int distance = 200;
+				ofDrawCircle(ofGetWidth()/2 + amplitude * sin((p + i) * 0.01 + time) + ribbon * distance,
 							 (p + i),
-							 50 + 10 * sin((lerpedRadius * bandCounter) * 0.2 + time + x));
+							 50 + 20 * sin((lerpedRadius * bandCounter + bandCounter) * 0.2 + time + ribbon));
 			}
 			bandCounter += 1;
 		}
@@ -363,45 +408,39 @@ void ofApp::DrawSineWaveRadiusSpectrum()
 
 void ofApp::DrawSineWaveColorSpectrum()
 {
-	float time = ofGetElapsedTimef();
+	/*float time = ofGetElapsedTimef();
 	int bandsToGet = 512;
 	auto val = ofSoundGetSpectrum(bandsToGet);
 	auto screenHeight = ofGetHeight();
 	
 	int circlesPerBand = glm::ceil(screenHeight/bandsToGet) + 1;
-	bool evenNumberOfCircles = circlesPerBand % 2 == 0;
-	int halfTheCircles = glm::floor(circlesPerBand/2);
-	int stepsToMiddle = glm::ceil(circlesPerBand / 2);
 	
 	int bandCounter = 0;
 	
-	for(int x = 0; x < 3; x++)
+	for(int ribbon = -2; ribbon < 3; ribbon++)
 	{
 		for(int p = 0; p < screenHeight; p += circlesPerBand)
 		{
+			//shifting the index so the lower frequencys are not cut off at the top but are rather starting around 1/4 of the screen height (from the top down)
 			auto shiftedIndex = (bandCounter - bandsToGet/4) % bandsToGet;
 			
 			for (int i = 0; i < circlesPerBand; i++)
 			{
-				
 				ofSetColor(127 + 127 * sin(bandCounter * (val[shiftedIndex] + 0.01) + time),
-				 127 + 127 * sin(bandCounter * (val[shiftedIndex] + 0.011) + time),
-				 127 + 127 * sin(bandCounter * (val[shiftedIndex] + 0.012) + time));
+						   127 + 127 * sin(bandCounter * (val[shiftedIndex] + 0.011) + time),
+						   127 + 127 * sin(bandCounter * (val[shiftedIndex] + 0.012) + time));
 				
-				
-				
-				/*ofDrawCircle(ofGetWidth()/2 + 100 * sin((p + i) * 0.01 + time),
+				//live changes: how many ribbons (x), x starting point, amplitude, distance
+				int amplitude = 100;
+				int distance = 200;
+				ofDrawCircle(ofGetWidth()/2 + amplitude * ribbon * sin((p + i) * 0.01 + time) + ribbon * distance,
 							 (p + i),
-							 50 + 30 * sin((p + i) * 0.005 + time));*/
-				
-				ofDrawCircle(ofGetWidth()/2 + 100 * sin((p + i) * 0.01 + time + x*10),
-							 (p + i),
-							 50 + 30 * sin((p + i) * 0.005 + time + x));
+							 50 + 30 * sin((p + i) * 0.005 + time + ribbon));
 				
 			}
 			bandCounter += 1;
 		}
-	}
+	}*/
 }
 
 
@@ -444,18 +483,18 @@ void ofApp::keyPressed(int key)
 		case 'a':
 			ToggleAutoPlay();
 			break;
-		case 'g':
+		case 'h':
 			m_showProgress = !m_showProgress;
 			break;
 			
 		case 'w':
-			UpdateVisuStyleTo(0);
+			OnVisuStyleChangedManual(0);
 			break;
-		case 's':
-			UpdateVisuStyleTo(1);
+		case 'r':
+			OnVisuStyleChangedManual(1);
 			break;
 		case 'c':
-			UpdateVisuStyleTo(2);
+			OnVisuStyleChangedManual(2);
 			break;
 			
 		case OF_KEY_LEFT:
