@@ -13,6 +13,7 @@
 		1E9FD88630B0CA5400CD1066 /* VisualizationRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FD88530B0CA5300CD1066 /* VisualizationRenderer.cpp */; };
 		1E9FD88930B0CE5C00CD1066 /* WheelRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FD88830B0CE5A00CD1066 /* WheelRenderer.cpp */; };
 		1E9FD88C30B0D25800CD1066 /* SineColorRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FD88B30B0D25700CD1066 /* SineColorRenderer.cpp */; };
+		1E9FD88F30B0D8E300CD1066 /* SineRadiusRenderer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1E9FD88E30B0D8E200CD1066 /* SineRadiusRenderer.cpp */; };
 		"22363D0C-ACC5-459A-B66C-F7652E56EE1E" /* OscTypes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = "FB534BD1-618D-4341-A312-B2F469606872" /* OscTypes.cpp */; };
 		"2E2DBD2D-54DC-48AC-AB7B-EBF00CDA8E92" /* ofxPanel.cpp in Sources */ = {isa = PBXBuildFile; fileRef = "DD452865-A031-4ECD-808E-CDC2FDF1CC6D" /* ofxPanel.cpp */; };
 		"4BC67639-9D19-41C3-BC12-741572C0049F" /* ofxToggle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = "B9D25B91-5842-48AE-8320-B62B38A48AA9" /* ofxToggle.cpp */; };
@@ -76,6 +77,8 @@
 		1E9FD88830B0CE5A00CD1066 /* WheelRenderer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = WheelRenderer.cpp; sourceTree = "<group>"; };
 		1E9FD88A30B0D24900CD1066 /* SineColorRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SineColorRenderer.h; sourceTree = "<group>"; };
 		1E9FD88B30B0D25700CD1066 /* SineColorRenderer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SineColorRenderer.cpp; sourceTree = "<group>"; };
+		1E9FD88D30B0D8D700CD1066 /* SineRadiusRenderer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SineRadiusRenderer.h; sourceTree = "<group>"; };
+		1E9FD88E30B0D8E200CD1066 /* SineRadiusRenderer.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = SineRadiusRenderer.cpp; sourceTree = "<group>"; };
 		"2C354E49-78A7-4E36-8D8F-A7DDCC136334" /* ofxColorPicker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ofxColorPicker.h; sourceTree = "<group>"; };
 		"2EF1FA20-A954-4FBE-B824-3AAF874DE485" /* ofxDropdown.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ofxDropdown.cpp; sourceTree = "<group>"; };
 		"2FBE8790-9349-4A6E-A9D5-93FBD2DCA255" /* TimerListener.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = TimerListener.h; sourceTree = "<group>"; };
@@ -328,6 +331,8 @@
 		E4B69E1C0A3A1BDC003C02F2 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				1E9FD88E30B0D8E200CD1066 /* SineRadiusRenderer.cpp */,
+				1E9FD88D30B0D8D700CD1066 /* SineRadiusRenderer.h */,
 				1E9FD88B30B0D25700CD1066 /* SineColorRenderer.cpp */,
 				1E9FD88A30B0D24900CD1066 /* SineColorRenderer.h */,
 				1E9FD88830B0CE5A00CD1066 /* WheelRenderer.cpp */,
@@ -449,6 +454,7 @@
 				"FCD391E0-8A17-4D56-9078-802634EC67DF" /* ofxLabel.cpp in Sources */,
 				1E9FD88C30B0D25800CD1066 /* SineColorRenderer.cpp in Sources */,
 				"2E2DBD2D-54DC-48AC-AB7B-EBF00CDA8E92" /* ofxPanel.cpp in Sources */,
+				1E9FD88F30B0D8E300CD1066 /* SineRadiusRenderer.cpp in Sources */,
 				"12D99FDE-7403-45AD-99ED-95E6B31227F9" /* ofxSlider.cpp in Sources */,
 				"F2A524B1-1C14-43A7-9687-3F4CDBFFF39B" /* ofxSliderGroup.cpp in Sources */,
 				"4BC67639-9D19-41C3-BC12-741572C0049F" /* ofxToggle.cpp in Sources */,

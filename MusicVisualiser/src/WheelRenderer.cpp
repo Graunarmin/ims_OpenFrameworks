@@ -6,37 +6,40 @@
 //
 #include "WheelRenderer.h"
 
-WheelRenderer::WheelRenderer(){}
+WheelRenderer::WheelRenderer()
+{}
 
-void WheelRenderer::setup(std::string name)
+void WheelRenderer::setup(std::string name, float &mainGuiHeight)
 {
-	VisualizationRenderer::setup(name);
+	VisualizationRenderer::setup(name, mainGuiHeight);
+
+	parameters.add(barWidth.set("Bar width", 40, 1, 100));
+	parameters.add(barLength.set("Bar length", 400, 50, 1000));
 	
 }
 
 void WheelRenderer::draw()
 {
-	float bandsToGet = 512;
-	//float exactBarWidth = (2 * acos(0.0) * 50) / bandsToGet;
-	float barWidth = 40;
-	int barLength = 400;
+	float btG = this -> bandsToGet; // I'm not sure why, but here this has to be a float
 	
-	auto val = ofSoundGetSpectrum(bandsToGet);
+	auto val = ofSoundGetSpectrum(btG);
 	
-	for(int i = 0; i < bandsToGet; i++)
+	for(int i = 0; i < btG; i++)
 	{
-		// mapping sound to color isn't as easy as I thought. Maybe later.
-		//ofDrawRectangle(100 + i * width, ofGetHeight()-100, width, -(val[i] * 200));
-		
 		ofPushMatrix();
 		ofTranslate(ofGetWidth()/2, ofGetHeight()/2); // translate the origin to the middle of the window
-		ofRotateDeg(360/bandsToGet * i); // rotate around the (newly set) origin
+		ofRotateDeg(360/btG * i); // rotate around the (newly set) origin
 		
 		ofColor drawingColor;
-		drawingColor.setHsb(255/bandsToGet * i, 255, 255, 50);
+		drawingColor.setHsb(255/btG * i, 255, 255, 50);
 		ofSetColor(drawingColor);
 		ofDrawRectangle(50, -barWidth/2, val[i] * barLength, barWidth/2);
 		
 		ofPopMatrix();
 	}
+}
+
+void WheelRenderer::DrawGui()
+{
+	//panel.draw();
 }

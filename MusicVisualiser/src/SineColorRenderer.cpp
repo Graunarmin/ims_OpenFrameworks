@@ -8,21 +8,20 @@
 
 SineColorRenderer::SineColorRenderer(){}
 
-void SineColorRenderer::setup(std::string name)
+void SineColorRenderer::setup(std::string name, float &mainGuiHeight)
 {
-	VisualizationRenderer::setup(name);
+	VisualizationRenderer::setup(name, mainGuiHeight);
 	
 	parameters.add(amplitude.set("Amplitude", 100, 1, 400));
 	parameters.add(distance.set("Distance", 50, 0, 500));
 	parameters.add(numberOfRibbons.set("Ribbons", 3, 1, 15));
-	parameters.add(ribbonStart.set("Start at", -2, -15, 0));
+	parameters.add(ribbonStart.set("Start at", -1, -15, 0));
 	
 }
 
 void SineColorRenderer::draw()
 {
 	float time = ofGetElapsedTimef();
-	//int bandsToGet = 512;
 	auto val = ofSoundGetSpectrum(bandsToGet);
 	auto screenHeight = ofGetHeight();
 	
@@ -55,4 +54,6 @@ void SineColorRenderer::draw()
 		}
 	}
 }
+
+void SineColorRenderer::DrawGui(){}
 

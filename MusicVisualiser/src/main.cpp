@@ -1,7 +1,6 @@
 #include "ofMain.h"
 #include "ofApp.h"
-#include "RemoteControl.h"
-#include "VisualizationRenderer.h"
+
 
 //========================================================================
 int main( ){

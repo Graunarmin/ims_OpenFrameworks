@@ -14,6 +14,7 @@ Sources:
 #include "VisualizationRenderer.h"
 #include "WheelRenderer.h"
 #include "SineColorRenderer.h"
+#include "SineRadiusRenderer.h"
 
 class ofApp : public ofBaseApp{
 
@@ -46,6 +47,8 @@ class ofApp : public ofBaseApp{
 		void DrawSineWaveRadiusSpectrum();
 		void DrawSineWaveColorSpectrum();
 		void FadeOutBackground();
+		
+		//void RemoveOldGuiParamaters();
 	
 		/// \brief Adds the given amount to the current speed and sends an update to the remote control, to update the osc-interface.
 		/// Callback function for key presses.
@@ -95,6 +98,8 @@ class ofApp : public ofBaseApp{
 		float m_currentTime;
 		int m_totalSampleCount;
 		int m_visualizationIndex;
+		//int m_previousVisu;
+		//bool m_visuGuiUpdated;
 		
 		std::vector<ofSoundPlayer> m_samples;
 		std::string m_samplePath;
@@ -107,13 +112,23 @@ class ofApp : public ofBaseApp{
 		float m_autoPlayMaxTempo;
 		ofxToggle m_autoPlayOn;
 		bool m_showProgress;
+		bool m_showGui;
+		bool m_showHelp;
 		
 		ofxPanel gui;
+		ofxPanel wheelPanel;
+		ofxPanel sineRadiusPanel;
+		ofxPanel sineColorPanel;
 		ofParameterGroup parameters;
 		std::unique_ptr<ofxIntDropdown> visuStylesDropdown;
 			
 		RemoteControl controller;
 		WheelRenderer rendererWheel;
+		SineRadiusRenderer rendererRadius;
 		SineColorRenderer rendererColor;
+	
+		int m_progressX;
+		int m_helpX;
+		int m_helpYbottomOffset;
 	
 };

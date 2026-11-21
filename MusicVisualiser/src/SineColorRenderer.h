@@ -12,13 +12,18 @@
 
 class SineColorRenderer : public VisualizationRenderer
 {
-public:
-	SineColorRenderer();
-	void setup(std::string name) override;
-	void draw() override;
+	public:
+		SineColorRenderer();
+		void setup(std::string name, float &mainGuiHeight) override;
+		void draw() override;
+		
+		ofParameter<float> amplitude;
+		ofParameter<float> distance;
+		ofParameter<int> numberOfRibbons;
+		ofParameter<int> ribbonStart;
+		
+	// Optional: Add modifiers for color (rgb) and a reset button
 	
-	ofParameter<float> amplitude;
-	ofParameter<float> distance;
-	ofParameter<int> numberOfRibbons;
-	ofParameter<int> ribbonStart;
+protected:
+	void DrawGui() override;
 };

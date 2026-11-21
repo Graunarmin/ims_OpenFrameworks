@@ -18,7 +18,11 @@ void ofApp::setup()
 	m_samplePan = 0;
 	LoadSamples();
 	
+	
+	
 	m_showProgress = true;
+	m_showHelp = true;
+	m_showGui = true;
 	
 	m_autoPlayOn = true;
 	m_autoPlayTempo = 0;
@@ -26,6 +30,10 @@ void ofApp::setup()
 	m_autoPlayMaxTempo = 6000;
 	
 	m_currentTime = ofGetSystemTimeMillis();
+	
+	m_progressX = 250;
+	m_helpX = 10;
+	m_helpYbottomOffset = 20;
 	
 	ofSetCircleResolution(100);
 	
@@ -35,11 +43,8 @@ void ofApp::setup()
 	ofBackground(0, 0, 0);
 	
 	controller = RemoteControl();
-	rendererWheel = WheelRenderer();
-	rendererWheel.setup("Wheel");
 	
-	rendererColor = SineColorRenderer();
-	rendererColor.setup("Sine Wave – Color");
+	
 	
 	ofAddListener(controller.OnSpeedChanged, this, &ofApp::UpdateSpeedTo);
 	ofAddListener(controller.OnPanChanged, this, &ofApp::UpdatePanTo);
@@ -47,7 +52,7 @@ void ofApp::setup()
 	ofAddListener(controller.OnNewSampleSelected, this, &ofApp::OnSampleTrackSelected);
 	ofAddListener(controller.OnVisuStyleChanged, this, &ofApp::UpdateVisuStyleTo);
 	
-	gui.setup();
+	gui.setup("Sound Settings");
 	gui.add(m_autoPlayOn.setup("Autoplay", true));
 	gui.add(m_samplePan.set("Pan",0, -1, 1));
 	gui.add(m_sampleSpeed.set("Speed", 1, 0.1, 2));
@@ -61,14 +66,33 @@ void ofApp::setup()
 	gui.add(visuStylesDropdown.get());
 	visuStylesDropdown -> setSelectedValueByIndex(m_visualizationIndex, false);
 	
-	parameters.setName("Settings");
-	parameters.add(rendererWheel.parameters);
-	parameters.add(rendererColor.parameters);
-	gui.add(parameters);
+	float guiHeight = gui.getHeight();
 	
-	// TODO: Add Listeners to parameters so we can notify TouchOSC?
+	rendererWheel = WheelRenderer();
+	rendererWheel.setup("Spectrum Wheel", guiHeight);
+	wheelPanel.setup("Visualization Settings", "settings.xml", 10, guiHeight + 20);
+	wheelPanel.add(rendererWheel.parameters);
 	
+	rendererRadius = SineRadiusRenderer();
+	rendererRadius.setup("Sine Wave - Radius", guiHeight);
+	sineRadiusPanel.setup("Visualization Settings", "settings.xml", 10, guiHeight + 20);
+	sineRadiusPanel.add(rendererRadius.parameters);
+	
+	rendererColor = SineColorRenderer();
+	rendererColor.setup("Sine Wave – Color", guiHeight);
+	sineColorPanel.setup("Visualization Settings", "settings.xml", 10, guiHeight + 20);
+	sineColorPanel.add(rendererColor.parameters);
+	
+	//parameters.setName("Visualization Settings");
+	//parameters.add(rendererWheel.parameters);
+	//parameters.add(rendererColor.parameters);
+	//parameters.add(rendererRadius.parameters);
+	//gui.add(parameters);
+	
+	// TODO: Add Listeners to other parameters so we can notify TouchOSC!
 	visuStylesDropdown -> addListener(this, &ofApp::OnGuiVisuStyleChanged);
+	
+	
 	
 }
 
@@ -98,22 +122,40 @@ void ofApp::draw()
 	if(m_showProgress)
 	{
 		DrawProgressBars();
+	}
+	if(m_showHelp)
+	{
+		WriteHelpText();
+	}
+	if(m_showGui)
+	{
 		gui.draw();
 	}
 	
 	if(m_visualizationIndex == 1)
 	{
-		DrawSineWaveRadiusSpectrum();
+		rendererRadius.draw();
+		if(m_showGui)
+		{
+			sineRadiusPanel.draw();
+		}
 	}
 	else if(m_visualizationIndex == 2)
 	{
-		//DrawSineWaveColorSpectrum();
 		rendererColor.draw();
+		if(m_showGui)
+		{
+			sineColorPanel.draw();
+		}
 	}
 	else
 	{
-		//DrawFrequencyWheel();
 		rendererWheel.draw();
+		if(m_showGui)
+		{
+			wheelPanel.draw();
+		}
+		
 	}
 
 }
@@ -151,7 +193,6 @@ void ofApp::LoadSamples()
 
 void ofApp::PlaySampleAt(int index)
 {
-	std::cout << "Playing Sample at " << index + 1 << std::endl;
 	if(m_samples.size() >= index + 1)
 	{
 		auto sample = m_samples[index];
@@ -176,36 +217,41 @@ void ofApp::DrawProgressBars()
 	for (int i = 0; i < m_totalSampleCount; i++) {
 		if(m_samples[i].isPlaying())
 		{
-			ofDrawRectangle(90, (i*20) + 7, //starting point x,y
-							ofMap(m_samples[i].getPosition(), 0, 1, 20, ofGetWidth()-110), //width
+			ofDrawRectangle(m_progressX + 90, (i*20) + 7, //starting point x,y
+							ofMap(m_samples[i].getPosition(), 0, 1, 20, ofGetWidth()-(m_progressX + 110)), //width
 							18); //height
 			ofDrawBitmapStringHighlight("sample " + ofToString(i + 1 ) + ":",
-										10, (i+1) * 20);
+										m_progressX, (i+1) * 20);
 		}
 		else
 		{
 			ofDrawBitmapString("sample " + ofToString(i + 1 ) + ":",
-							   10, (i+1) * 20);
+							   m_progressX, (i+1) * 20);
 		}
 	}
-	WriteHelpText();
 }
 
 void ofApp::WriteHelpText()
 {
-	ofDrawBitmapString("Toggle help with 'g'", 10, 200);
-	ofDrawBitmapString("Toggle Autoplay with 'a'", 10, 220);
+	auto screenHeight = ofGetHeight();
+	
+	ofDrawBitmapString("Toggle Autoplay with 'a'", m_helpX, screenHeight - m_helpYbottomOffset - 160);
 	if(m_autoPlayOn)
 	{
-		ofDrawBitmapString("Auto play is ON", 10, 240);
-		ofDrawBitmapString("Next Sample in " + ofToString(((m_currentTime + m_autoPlayTempo) - ofGetSystemTimeMillis())/1000), 10, 260);
+		ofDrawBitmapString("Auto play is ON", m_helpX, screenHeight - m_helpYbottomOffset - 180);
+		ofDrawBitmapString("Next Sample in " + ofToString(((m_currentTime + m_autoPlayTempo) - ofGetSystemTimeMillis())/1000), m_helpX, screenHeight - m_helpYbottomOffset - 140);
 	}
 	else
 	{
-		ofDrawBitmapString("Auto play is OFF", 10, 240);
+		ofDrawBitmapString("Auto play is OFF", m_helpX, screenHeight - m_helpYbottomOffset - 180);
 	}
-	ofDrawBitmapString("Speed for next sample is " + ofToString(m_sampleSpeed), 10, 300);
-	ofDrawBitmapString("Pan for next sample is " + ofToString(m_samplePan), 10, 320);
+	ofDrawBitmapString("Speed for next sample is " + ofToString(m_sampleSpeed), m_helpX, screenHeight - m_helpYbottomOffset - 120);
+	ofDrawBitmapString("Pan for next sample is " + ofToString(m_samplePan), m_helpX, screenHeight - m_helpYbottomOffset - 100);
+	
+	ofDrawBitmapString("Toggle GUI with 'g'", m_helpX, screenHeight - m_helpYbottomOffset - 60);
+	ofDrawBitmapString("Toggle progress with 'p'", m_helpX, screenHeight - m_helpYbottomOffset - 40);
+	ofDrawBitmapString("Toggle help with 'h'", m_helpX, screenHeight - m_helpYbottomOffset - 20);
+	ofDrawBitmapString("Toggle fullscreen with 'f'", m_helpX, screenHeight - m_helpYbottomOffset);
 }
 	
 // ---- AUTO PLAY ----
@@ -268,6 +314,8 @@ void ofApp::NotifyOscOnPanChange(float &newPan)
 // ---- VISUALIZATION ----
 void ofApp::UpdateVisuStyleTo(int &index)
 {
+	//m_previousVisu = m_visualizationIndex;
+	//m_visuGuiUpdated = false;
 	m_visualizationIndex = index;
 	if(index == 1 || index == 2){
 		ofSetBackgroundAuto(true);
@@ -288,8 +336,6 @@ void ofApp::OnVisuStyleChangedManual(int index)
 void ofApp::OnGuiVisuStyleChanged(int &index)
 {
 	OnVisuStyleChangedManual(index);
-	//UpdateVisuStyleTo(index);
-	//controller.SendVisuChangeFeedback(m_visualizationIndex);
 }
 
 void ofApp::FadeOutBackground()
@@ -310,9 +356,6 @@ void ofApp::DrawFrequencyWheel()
 	
 	for(int i = 0; i < bandsToGet; i++)
 	{
-		// mapping sound to color isn't as easy as I thought. Maybe later.
-		//ofDrawRectangle(100 + i * width, ofGetHeight()-100, width, -(val[i] * 200));
-		
 		ofPushMatrix();
 		ofTranslate(ofGetWidth()/2, ofGetHeight()/2); // translate the origin to the middle of the window
 		ofRotateDeg(360/bandsToGet * i); // rotate around the (newly set) origin
@@ -328,7 +371,7 @@ void ofApp::DrawFrequencyWheel()
 
 void ofApp::DrawSineWaveRadiusSpectrum()
 {
-	float time = ofGetElapsedTimef();
+	/*float time = ofGetElapsedTimef();
 	int bandsToGet = 512;
 	auto val = ofSoundGetSpectrum(bandsToGet);
 	auto screenHeight = ofGetHeight();
@@ -387,14 +430,6 @@ void ofApp::DrawSineWaveRadiusSpectrum()
 					}
 				}
 				
-				/*ofDrawCircle(ofGetWidth()/2 + 100 * sin((p + i) * 0.01 + time),
-							 (p + i),
-							 50 + 30 * sin((p + i) * 0.005 + time));*/
-				
-				/*ofDrawCircle(ofGetWidth()/2 + 100 * sin((p + i) * 0.01 + time + x),
-							 (p + i),
-							 50 + 30 * sin((p + i) * 0.005 + time + x));*/
-				
 				int amplitude = 100;
 				int distance = 200;
 				ofDrawCircle(ofGetWidth()/2 + amplitude * sin((p + i) * 0.01 + time) + ribbon * distance,
@@ -403,7 +438,7 @@ void ofApp::DrawSineWaveRadiusSpectrum()
 			}
 			bandCounter += 1;
 		}
-	}
+	}*/
 }
 
 void ofApp::DrawSineWaveColorSpectrum()
@@ -442,6 +477,27 @@ void ofApp::DrawSineWaveColorSpectrum()
 		}
 	}*/
 }
+
+/*void ofApp::RemoveOldGuiParamaters()
+{
+	if(m_previousVisu != -1)
+	{
+		
+		if(m_previousVisu == 0 && m_visualizationIndex != 0)
+		{
+			parameters.remove(rendererWheel.parameters);
+		}
+		else if (m_previousVisu == 1 && m_visualizationIndex != 1)
+		{
+			parameters.remove(rendererRadius.parameters);
+		}
+		else if(m_previousVisu == 2 && m_visualizationIndex != 2)
+		{
+			parameters.remove(rendererColor.parameters);
+		}
+		m_previousVisu = -1;
+	}
+}*/
 
 
 //---------------- OF EVENTS -------------------
@@ -484,6 +540,12 @@ void ofApp::keyPressed(int key)
 			ToggleAutoPlay();
 			break;
 		case 'h':
+			m_showHelp = !m_showHelp;
+			break;
+		case 'g':
+			m_showGui = !m_showGui;
+			break;
+		case 'p':
 			m_showProgress = !m_showProgress;
 			break;
 			

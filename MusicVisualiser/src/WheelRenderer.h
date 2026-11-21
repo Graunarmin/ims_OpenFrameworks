@@ -9,11 +9,18 @@
 #include "ofMain.h"
 #include "VisualizationRenderer.h"
 
+
 class WheelRenderer : public VisualizationRenderer
 {
 	public:
 		WheelRenderer();
-		void setup(std::string name) override;
+		void setup(std::string name, float &mainGuiHeight) override;
 		
 		void draw() override;
+		
+		ofParameter<int> barWidth;
+		ofParameter<int> barLength;
+	
+	protected:
+	void DrawGui() override;
 };

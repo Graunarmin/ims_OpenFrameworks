@@ -14,10 +14,13 @@ class VisualizationRenderer
 public:
 	VisualizationRenderer();
 	
-	virtual void setup(std::string name);
+	virtual void setup(std::string name, float &mainGuiHeight);
 	virtual void draw();
 	
 	ofParameterGroup parameters;
 	ofParameter<int> bandsToGet;
+	
+protected:
+	virtual void DrawGui();
 	
 };

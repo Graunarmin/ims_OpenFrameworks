@@ -12,10 +12,12 @@ VisualizationRenderer::VisualizationRenderer()
 	
 }
 
-void VisualizationRenderer::setup(std::string name)
+void VisualizationRenderer::setup(std::string name, float &mainGuiHeight)
 {
 	parameters.setName(name);
 	parameters.add(bandsToGet.set("Bands to get", 512, 64, 512));
+	
 }
 
 void VisualizationRenderer::draw(){ }
+void VisualizationRenderer::DrawGui(){}
